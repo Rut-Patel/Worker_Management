@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Worker_Management.Models
 {
@@ -11,5 +12,7 @@ namespace Worker_Management.Models
         public string first_name { get; set; }
         public string last_name { get; set; }
         public string department { get; set; }
+
+        
     }
 }
