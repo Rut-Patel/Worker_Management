@@ -1,11 +1,16 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+//Make sure you have the following imports
+using Microsoft.AspNetCore.Identity;
 using Worker_Management.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication;
+using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 
 namespace Worker_Management.Controllers
 {
@@ -19,6 +24,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Supervisiors
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             return View(await _context.Supervisiors.ToListAsync());
@@ -43,6 +49,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Supervisiors/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -53,6 +60,7 @@ namespace Worker_Management.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("supervisiorID,first_name,last_name,department")] Supervisior supervisior)
         {
             if (ModelState.IsValid)
@@ -65,6 +73,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Supervisiors/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -85,6 +94,7 @@ namespace Worker_Management.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Edit(int id, [Bind("supervisiorID,first_name,last_name,department")] Supervisior supervisior)
         {
             if (id != supervisior.supervisiorID)
@@ -116,6 +126,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Supervisiors/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -136,6 +147,7 @@ namespace Worker_Management.Controllers
         // POST: Supervisiors/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var supervisior = await _context.Supervisiors.FindAsync(id);

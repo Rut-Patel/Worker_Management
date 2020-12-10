@@ -1,11 +1,17 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+//Make sure you have the following imports
+using Microsoft.AspNetCore.Identity;
 using Worker_Management.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication;
+using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Worker_Management.Controllers
 {
@@ -19,6 +25,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Workers
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var workerContext = _context.Workers.Include(w => w.Supervisior);
@@ -26,6 +33,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Workers/Details/5
+        [Authorize]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -45,6 +53,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Workers/Create
+        [Authorize]
         public IActionResult Create()
         {
             ViewData["SupervisiorFK"] = new SelectList(_context.Supervisiors, "supervisiorID", "supervisiorID");
@@ -56,6 +65,7 @@ namespace Worker_Management.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create([Bind("workerID,first_name,last_name,hired_date,SupervisiorFK")] Worker worker)
         {
             if (ModelState.IsValid)
@@ -69,6 +79,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Workers/Edit/5
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -89,6 +100,7 @@ namespace Worker_Management.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("workerID,first_name,last_name,hired_date,SupervisiorFK")] Worker worker)
         {
@@ -122,6 +134,7 @@ namespace Worker_Management.Controllers
         }
 
         // GET: Workers/Delete/5
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -143,6 +156,7 @@ namespace Worker_Management.Controllers
         // POST: Workers/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var worker = await _context.Workers.FindAsync(id);

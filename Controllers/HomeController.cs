@@ -1,11 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+//Make sure you have the following imports
+using Microsoft.AspNetCore.Identity;
 using Worker_Management.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authentication;
+using System.Diagnostics;
 
 namespace Worker_Management.Controllers
 {
@@ -18,11 +22,13 @@ namespace Worker_Management.Controllers
             _logger = logger;
         }
 
+        [Authorize]
         public IActionResult Index()
         {
             return View();
         }
 
+        [Authorize]
         public IActionResult Privacy()
         {
             return View();

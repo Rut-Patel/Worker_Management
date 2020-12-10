@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer;
 //we also need to install (but not import) Microsoft.EntityFrameworkCore.Tools
+using Worker_Management.Data;
+using Microsoft.AspNetCore.Identity;
 
 namespace Worker_Management
 {
@@ -37,6 +39,15 @@ namespace Worker_Management
             string con_worker = @"Server=(localdb)\mssqllocaldb;Database=Worker_Management;Trusted_Connection=True;ConnectRetryCount=0";
             //Adding Db Context
             services.AddDbContext<WorkerContext>(options => options.UseSqlServer(con_worker));
+            //Default.
+            services.AddControllersWithViews();
+            //Added by me.
+            services.AddRazorPages();
+            services.AddMvc();
+            services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddIdentity<AppUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,14 +67,16 @@ namespace Worker_Management
             app.UseStaticFiles();
 
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseMvcWithDefaultRoute();
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}"); 
             });
         }
     }
