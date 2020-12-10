@@ -14,95 +14,95 @@ namespace Worker_Management.Controllers
 {
     public class AccountController : Controller
     {
-            public IActionResult Index()
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
+        private readonly ILogger _logger;
+
+        public AccountController(
+                    UserManager<AppUser> userManager,
+                    SignInManager<AppUser> signInManager,
+                    ILogger<AccountController> logger)
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _logger = logger;
+        }
+
+
+
+        #region Helpers
+
+        private void AddErrors(IdentityResult result)
+        {
+            foreach (var error in result.Errors)
             {
-                return View();
+                ModelState.AddModelError(string.Empty, error.Description);
             }
+        }
 
-            private readonly UserManager<AppUser> _userManager;
-            private readonly SignInManager<AppUser> _signInManager;
-            private readonly ILogger _logger;
-
-            public AccountController(
-                        UserManager<AppUser> userManager,
-                        SignInManager<AppUser> signInManager,
-                        ILogger<AccountController> logger)
+        private IActionResult RedirectToLocal(string returnUrl)
+        {
+            if (Url.IsLocalUrl(returnUrl))
             {
-                _userManager = userManager;
-                _signInManager = signInManager;
-                _logger = logger;
+                return Redirect(returnUrl);
             }
-
-
-
-            #region Helpers
-
-            private void AddErrors(IdentityResult result)
+            else
             {
-                foreach (var error in result.Errors)
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+        }
+
+        #endregion
+
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Register(string returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = returnUrl;
+            if (ModelState.IsValid)
+            {
+                var user = new AppUser { UserName = model.Email, Email = model.Email };
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    _logger.LogInformation("User created a new account with password.");
+
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    _logger.LogInformation("User created a new account with password.");
+                    return RedirectToLocal(returnUrl);
                 }
+                AddErrors(result);
             }
 
-            private IActionResult RedirectToLocal(string returnUrl)
-            {
-                if (Url.IsLocalUrl(returnUrl))
-                {
-                    return Redirect(returnUrl);
-                }
-                else
-                {
-                    return RedirectToAction(nameof(HomeController.Index), "Home");
-                }
-            }
+            // If we got this far, something failed, redisplay form
+            return View(model);
+        }
 
-            #endregion
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> Login(string returnUrl = null)
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
-
-            [HttpGet]
-            [AllowAnonymous]
-            public IActionResult Register(string returnUrl = null)
-            {
-                ViewData["ReturnUrl"] = returnUrl;
-                return View();
-            }
-
-            [HttpPost]
-            [AllowAnonymous]
-            [ValidateAntiForgeryToken]
-            public async Task<IActionResult> Register(RegisterViewModel model, string returnUrl = null)
-            {
-                ViewData["ReturnUrl"] = returnUrl;
-                if (ModelState.IsValid)
-                {
-                    var user = new AppUser { UserName = model.Email, Email = model.Email };
-                    var result = await _userManager.CreateAsync(user, model.Password);
-                    if (result.Succeeded)
-                    {
-                        _logger.LogInformation("User created a new account with password.");
-
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        _logger.LogInformation("User created a new account with password.");
-                        return RedirectToLocal(returnUrl);
-                    }
-                    AddErrors(result);
-                }
-
-                // If we got this far, something failed, redisplay form
-                return View(model);
-            }
-
-            [HttpGet]
-            [AllowAnonymous]
-            public async Task<IActionResult> Login(string returnUrl = null)
-            {
-                // Clear the existing external cookie to ensure a clean login process
-                await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-                ViewData["ReturnUrl"] = returnUrl;
-                return View();
-            }
+            ViewData["ReturnUrl"] = returnUrl;
+            return View();
+        }
 
         [HttpPost]
         [AllowAnonymous]
@@ -152,5 +152,69 @@ namespace Worker_Management.Controllers
             return RedirectToAction(nameof(AccountController.Login), "Logged Out");
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null & await _userManager.IsEmailConfirmedAsync(user))
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                    var passwordResetLink = Url.Action("ResetPassword", "Account",
+                        new { email = model.Email, token = token }, Request.Scheme);
+
+                    _logger.Log(LogLevel.Warning, passwordResetLink);
+                    return View("ForgotPasswordConfirmation");
+                }
+                return View("ForgotPasswordConfirmation");
+            }
+            return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string token, string email)
+        {
+            if (token == null || email == null)
+            {
+                ModelState.AddModelError("", "Invalid password reset token");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null)
+                {
+                    var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
+                    if (result.Succeeded)
+                    {
+                        return View("ResetPasswordConfirmation");
+                    }
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error.Description);
+                    }
+                    return View(model);
+                }
+                return View("ResetPasswordConfirmation");
+            }
+            return View(model);
+        }
     }
 }
