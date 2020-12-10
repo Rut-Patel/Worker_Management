@@ -174,9 +174,13 @@ namespace Worker_Management.Controllers
                         new { email = model.Email, token = token }, Request.Scheme);
 
                     _logger.Log(LogLevel.Warning, passwordResetLink);
-                    return View("ForgotPasswordConfirmation");
+
+                    //For checking purpose redircting users to the password reset login.
+                    return Redirect(passwordResetLink);
+                    //return View("ForgotPasswordConfirmation");
                 }
                 return View("ForgotPasswordConfirmation");
+
             }
             return View(model);
         }
